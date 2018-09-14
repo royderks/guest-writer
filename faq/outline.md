@@ -28,7 +28,6 @@ To illustrate better, take a look at the following outline. Here, you will see a
 ### Reactions on MobX
 ### Actions on MobX
 
-
 ## MobX and React in Practice
 ### Creating a new React app
 ### Installing Dependencies
