@@ -53,7 +53,7 @@ For example, _GitHub_ has two uppercase letters. So, it's important not to write
 
 ## Formatting with Markdown
 
-This section will give you some tips on what are the preferred approach when structuring/formatting you article. After reading the instructions here, please refer to the following cheatsheets. They can help you learn more about formatting content on Markdown files:
+This section will give you some tips on what are the preferred approach when structuring/formatting you article. After reading the instructions here, please, refer to the following cheatsheets. They can help you learn more about formatting content on Markdown files:
 
 - [_Markdown Cheatsheet_](https://github.com/auth0/blog/blob/master/post-cheat-sheet.markdown)
 - [_Auth0 Markdown Cheatsheet_](https://github.com/auth0/blog/blob/master/post-cheat-sheet.markdown)
