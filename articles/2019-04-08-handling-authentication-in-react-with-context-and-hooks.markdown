@@ -162,10 +162,10 @@ npx create-react-app new-project
 You can now move into the directory `new-project` and open the project in your code editor. In the next section, you'll make changes to the files that are placed in the `src` directory.
 
 ### Add a Context Provider and Consumer
-Second, the boilerplate code that is provided in the file `src/App.jsx` can be removed and replaced with the following:
+Second, the boilerplate code that is provided in the file `src/App.js` can be removed and replaced with the following:
 
 ```js
-// src/App.jsx
+// src/App.js
 import React from "react";
 
 const MeetupContext = React.createContext();
@@ -193,14 +193,14 @@ export default App
 
 The code block above represents an implementation of the Context API in the form of `MeetupContext`, which has a Provider that takes the object initialState as value and a Consumer that displays this information.
 
-Also, you can remove the files `src/App.test.jsx`, `src/App.css` and `src/Logo.svg` as testing and styling of your code will be skipped in this tutorial.
+Also, you can remove the files `src/App.test.js`, `src/App.css` and `src/Logo.svg` as testing and styling of your code will be skipped in this tutorial.
 
 If you'd now open the browser on `http://localhost:3000/` you can see the first version of your application, which displays a title and the current date and time.
 
 Let's extend this information with some attendees for this fictional Meetup. Therefore you need to add a new field to the initialState object, which you can call `attendees` and assign an array with random names to it.
 
 ```js
-// src/App.jsx
+// src/App.js
 import React from "react";
 
 const MeetupContext = React.createContext();
@@ -208,7 +208,7 @@ const MeetupContext = React.createContext();
 const initialState = {
     title: 'Auth0 Online Meetup',
     date: Date(),
-      attendees: ['Bob', 'Jessy', 'Christina', 'Adam']
+    attendees: ['Bob', 'Jessy', 'Christina', 'Adam']
 }
 ...
 ```
@@ -216,7 +216,7 @@ const initialState = {
 And have the Consumer display this list of attendees:
 
 ```js
-// src/App.jsx
+// src/App.js
 ...
 const App = () => (
     <MeetupContext.Provider value={ initialState }>
@@ -245,7 +245,7 @@ The application is now able to display not only the Meetup information but also 
 Before you can actually subscribe to this Meetup, a new Context for the user should be added. You can nest multiple Context Providers and Consumers, making it possible to access props globally.
 
 ```js
-// src/App.jsx
+// src/App.js
 import React from "react";
 
 const MeetupContext = React.createContext();
@@ -256,7 +256,7 @@ const UserContext = React.createContext();
 As the Context for the user also needs an initial value, the current `initialState` constant with the value for the `MeetupContext` can be extended. You can do this by moving the fields about the Meetup to a new nested object called `meetup`. Also, create a new one for the user with just the field `name`.
 
 ```js
-// src/App.jsx
+// src/App.js
 import React from "react";
 
 const MeetupContext = React.createContext();
@@ -278,7 +278,7 @@ const initialState = {
 You can now add the newly created `UserContext` that takes the `user` field from `initialState` as its value within the `render()` function, and specify that `MeetupContext` should use the `meetup` field from `initialState` as its value. `MeetupContext` is placed within `UserContext`, as the Context for the user might be needed in other components (like a profile page) in the future as well.
 
 ```js
-// src/App.jsx
+// src/App.js
 ...
 const App = () => (
     <UserContext.Provider value={initialState.user}>
@@ -291,7 +291,7 @@ const App = () => (
 The Consumer for the user can be placed just above `MeetupContext`, and should return the value from the Provider not as `props` but as the variable `user`. Otherwise, it would lead to a duplicate declaration of the constant `props`. For clarity, let's also rename the return value from the Meetup's Consumer.
 
 ```js
-// src/App.jsx
+// src/App.js
 ...
 const App = () => (
     <UserContext.Provider value={initialState.user}>
@@ -328,10 +328,10 @@ When this user subscribes to this Meetup, you want the user's name to be added t
 You can start by creating a new component that returns the Provider for MeetupContext and takes both the user Context and any children as a prop. In this component, you can add the `useReducer` Hook, and extend the value for MeetupContext with the `dispatch` function that is returned by the Hook.
 
 ```js
-// src/App.jsx
+// src/App.js
 ...
 const MeetupContextProvider = ({ user, ...props }) => {
-  const [state, dispatch] = React.useReducer(reducer, initialValue.meetup);
+  const [state, dispatch] = React.useReducer(reducer, initialState.meetup);
 
   return (
     <MeetupContext.Provider value={{
@@ -351,7 +351,7 @@ const App = () => (
 As you can see this `useReducer` Hook also takes the reducer as a parameter, which you can add directly above the `MeetupContextProvider` component. This reducer takes both the state and the received action as parameters, when it receives an action with the type `subscribeUser` it will add the payload field of that action to the attendees' array.
 
 ```js
-// src/App.jsx
+// src/App.js
 ...
 const reducer = (state, action) => {
     switch (action.type) {
@@ -373,7 +373,7 @@ const MeetupContextProvider = (props) => {
 And you can do the same to unsubscribe the user for the Meetup:
 
 ```js
-// src/App.jsx
+// src/App.js
 const reducer = (state, action) => {
     switch (action.type) {
             case 'subscribeUser':
@@ -382,7 +382,7 @@ const reducer = (state, action) => {
                         attendees: [...state.attendees, action.payload],
                 subscribed: true
                   }
-        case ‘unSubscribeUser':
+        case 'unSubscribeUser':
                   return {
                         ...state,
                         attendees: state.attendees.filter(attendee => attendee !== action.payload),
@@ -397,10 +397,10 @@ const reducer = (state, action) => {
 Then of course as this action is now available within the Consumer for the Meetup, a button that invokes this function should be added to the application. Also, don't forget to send the user Context to MeetupContextProvider as this is needed to add the user to the list of attendees.
 
 ```js
-// src/App.jsx
+// src/App.js
 ...
 const App = () => (
-    <UserContext.Provider value={initialValue.user}>
+    <UserContext.Provider value={initialState.user}>
     <UserContext.Consumer>
       { user => (
         <MeetupContextProvider user={ user }>
@@ -418,6 +418,7 @@ const App = () => (
                     ? <button onClick={ meetup.handleSubscribe }>Subscribe</button>
                     : <button onClick={ meetup.handleUnSubscribe }>Unsubscribe</button>
                     </p>
+                  }
                   </div>
                         </div>
                     )}
@@ -463,7 +464,7 @@ REACT_APP_AUTH0_CLIENT_ID=[CLIENT ID]
 Furthermore, you can now create the file containing the logic to handle authentication using `auth0-js` and your application's key. You do this by creating a new file called `Auth.js` in the `src` directory, and add the following code block to this file:
 
 ```js
-// src/Auth.jsx
+// src/Auth.js
 import auth0 from 'auth0-js'
 
 export default class Auth {
@@ -505,10 +506,25 @@ export default class Auth {
 
 This Auth class has all the methods to handle authentication and store the JWT token that is returned by Auth0 in the client. Something that is needed to actually check if a user is authenticated or not.
 
+This new class should be imported in `src/App.js`, and used to create a new object called `auth`:
+
+```js
+// src/App.js
+import React from "react";
+import Auth from "./Auth";
+
+const auth = new Auth();
+
+const MeetupContext = React.createContext();
+const UserContext = React.createContext();
+
+...
+```
+
 As these authentication functions are related to the user, these need to be added to `UserContext`. Just as you already did for `MeetupContext`, the Provider for the user should be split into a different component.
 
 ```js
-// src/App.jsx
+// src/App.js
 …
 const UserContextProvider = (props) => {
       const [state, dispatch] = React.useReducer(reducer, initialState.user);
@@ -536,7 +552,7 @@ const MeetupContextProvider = ({ user, ...props }) => {
 In the code block above the Context Provider for the user is created, which also uses the `useReducer` Hook. Next, two functions from the Auth0 client are used to either initialize the authentication process or to verify it has returned a token. The authentication can be initialized by invoking the `handleLogin` function that is available on the user’s Context. If successful the `handleAuthentication` function will dispatch an action that sets the user as verified in the reducer, which you can do by adding another `case statement` to the reducer:
 
 ```js
-// src/App.jsx
+// src/App.js
 const reducer = (state, action) => {
     switch (action.type) {
             case 'loginUser':
@@ -550,7 +566,7 @@ const reducer = (state, action) => {
 Now you can make the changes to the return function, so the user can actually log in and subscribe to the Meetup:
 
 ```js
-// src/App.jsx
+// src/App.js
 …
 const App = () => (
     <UserContextProvider>
