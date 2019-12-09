@@ -74,15 +74,78 @@ function App() {
 export default App;
 ```
 
-After changing the file above, the application will render the text *"Hello GraphQL"* in the browser. Next to this change you can also delete the following files from the project as you won't be needing these:
+After changing the file above, the text *"Hello GraphQL"* will be visible in the browser meaning you have deleted all the code rendering the initial application. Next to this change you can also delete the following files from the project as you will no longer be needing these:
 
-- 
+```
+src
+|-- App.css
+|-- App.test.js
+|-- src/index.css
+|-- logo.svg
+|-- src/setupTests.js
+```
 
-
+The project is now ready to be connected to the GraphQL server for which [Apollo](https://www.apollographql.com/docs/react/) will be used in the next section. 
 ​
 ## Using GraphQL with Apollo
+The project you'll create in this post will be an application that displays a list of events and makes it possible to manage the attendants of those events. The data for this application is server by the GraphQL server that was described in the Prerequisites section of this post. After you've followed the instructions in the *Getting started* section README of that project, including adding your Auth0 information, the GraphQL server will become available at `http://localhost:4000/graphql` and an interactive playground at `http://localhost:4000/graphqplayground`. Using this GraphQL Playground interface you can inspect the schema of this server or send documents containing queries and/or mutations to it. An example of a query that can be handled by this GraphQL server is:
+
+```
+query {
+  events {
+    title
+    date
+    attendants {
+      name
+    }
+  }
+}
+```
+
+The response of this query will be the full list events including its `title`, `date` and the `name` of every attendant of the event. This response will be in JSON and looks like the following:
+
+```json
+{
+  "data": {
+    "events": [
+      {
+        "title": "GraphQL Introduction Night",
+        "date": "2019-11-06T17:34:25+00:00",
+        "attendants": [
+          {
+            "name": "Peter"
+          },
+          {
+            "name": "Kassandra"
+          }
+        ]
+      },
+      {
+        "title": "GraphQL Introduction Night #2",
+        "date": "2019-11-06T17:34:25+00:00",
+        "attendants": [
+          {
+            "name": "Kim"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+As mentioned before you can send documents to the GraphQL server over plain HTTP, but also by using a package like [Apollo](https://www.apollographql.com/docs/react/). With Apollo you can connect with the GraphQL server, handle queries and mutations, and enable caching for data retrieved from the GraphQL server. How to set up Apollo Client to work with React will be showed in the next part of this section.
+
 ### Setup Apollo Client with React
-*This section will show how to set up Apollo Client to connect with the GraphQL server `
+
+
+
+
+
+
+
+
+
 ### Query the GraphQL Server with Apollo
 *This section will show how to query the GraphQL server using Hooks from `react-apollo`
 ​
