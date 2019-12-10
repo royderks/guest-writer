@@ -67,19 +67,57 @@ The command `npm start` will run the start script of Create React App to compile
 
 ![create react app](articles/initial-create-react-app.jpg)
 
-Before you connect with the GraphQL server and create new components to display the responses from the server, you need to know how the Create React App project is structured. Let's start with the file `src/index.js`, which is the entry point of your React application, in this file a component called `App` is rendered by `ReactDOM`. This means that all the components that you'd like to render in the browser must be reachable from that component that's defined in the the file `src/App.js`. To make you start with a "fresh" applicationn, let's delete some of the code in this file, so you'd end up with the following content for `src/App.js`:
+The application you'll built in this post will be an application that displays a list of events and makes it possible to manage the attendants of those events. Therefore this application will consists of two pages, the page to list the events and a page to edit the events. Before you connect with the GraphQL server and create new components to display the responses from the server, you need to know how the Create React App project is structured. Let's start with the file `src/index.js`, which is the entry point of your React application, in this file a component called `App` is rendered by `ReactDOM`.
+
+This means that all the components that you'd like to render in the browser must be reachable from that component that's defined in the the file `src/App.js`, including routing. Routing in React (or other Single-Page Applications) works differently from routing in regular websites, and requires the usage of a library called `react-router-dom`. This package can be installed from npm by running the command below from your terminal:
+
+```
+npm install react-router-dom
+```
+
+With `react-router-dom` you can import a `Router` component that will be used by your application to dynamically change between pages, without having to refresh the page. This `Router` component must be added at the top level in `src/index.js`, where it must wrap the `App` component:
+
+```js
+// src/index.js
+
+import React from "react";
+import ReactDOM from "react-dom";
+import { BrowserRouter as Router } from "react-router-dom";
+import App from "./App";
+import * as serviceWorker from "./serviceWorker";
+
+ReactDOM.render(
+  <Router>
+    <App />
+  </Router>,
+  document.getElementById("root")
+);
+
+...
+
+```
+
+The routes for your application can be defined in the `src/App.js` file, where you must delete all the code that's currently in this file and replace it with the following:
 
 ```js
 import React from "react";
+import { Switch, Route } from "react-router-dom";
 
 function App() {
-  return "Hello GraphQL!";
+  return (
+    <Switch>
+      <Route path="/event/:id">Event</Route>
+      <Route path="*">All Events</Route>
+    </Switch>
+  );
 }
 
 export default App;
 ```
 
-After changing the file above, the text _"Hello GraphQL"_ will be visible in the browser meaning you have deleted all the code rendering the initial application. Next to this change you can also delete the following files from the project as you will no longer be needing these:
+After changing the file above you've created two routes for your application, where the `Switch` component first tries to find the route for a single event and otherwise directes to the _All Events_ route. The route for a single event can be found by visiting in example `http://localhost:3000/event/123` Later on in this tutorial you'll add the data to these routes.
+
+Next to creating the routes you can also delete the following files from the project as you will no longer be needing these:
 
 ```
 src
@@ -95,7 +133,7 @@ The project is now ready to be connected to the GraphQL server for which [Apollo
 
 ## Using GraphQL with Apollo
 
-The project you'll create in this post will be an application that displays a list of events and makes it possible to manage the attendants of those events. The data for this application is returned by the GraphQL server that was described in the Prerequisites section of this post. After you've followed the instructions in the _Getting started_ section of that project's README, including adding your Auth0 information, the GraphQL server will become available at `http://localhost:4000/graphql` and an interactive playground at `http://localhost:4000/graphqplayground`. Using this GraphQL Playground interface you can inspect the schema of this server or send documents containing queries and/or mutations to it. An example of a query that can be handled by this GraphQL server is:
+The data for the application you create in this post is returned by the GraphQL server that was described in the Prerequisites section of this post. After you've followed the instructions in the _Getting started_ section of that project's README, including adding your Auth0 information, the GraphQL server will become available at `http://localhost:4000/graphql` and an interactive playground at `http://localhost:4000/graphqplayground`. Using this GraphQL Playground interface you can inspect the schema of this server or send documents containing queries and/or mutations to it. An example of a query that can be handled by this GraphQL server is:
 
 ```
 query {
@@ -157,6 +195,7 @@ In the file `src/index.js` you can subsequently import the method `ApolloClient`
 // src/index.js
 import React from "react";
 import ReactDOM from "react-dom";
+import { BrowserRouter as Router } from "react-router-dom";
 import ApolloClient from "apollo-boost";
 import App from "./App";
 import * as serviceWorker from "./serviceWorker";
@@ -165,7 +204,12 @@ const client = new ApolloClient({
   uri: "https://48p1r2roz4.sse.codesandbox.io"
 });
 
-ReactDOM.render(<App />, document.getElementById("root"));
+ReactDOM.render(
+  <Router>
+    <App />
+  </Router>, 
+  document.getElementById("root")
+);
 
 ...
 
@@ -173,12 +217,13 @@ ReactDOM.render(<App />, document.getElementById("root"));
 
 But creating a client isn't sufficient to connect your React application to the GraphQL server, as you also need to create a Provider that wraps your application and makes it possible to access the client from everywhere in your project. This Provider uses the Context API from React, about which I [previously wrote a post](https://auth0.com/blog/handling-authentication-in-react-with-context-and-hooks/) on the Auth0 blog in case you aren't familiar with it.
 
-You can create a Provider by importing `ApolloProvider` from `@apollo/react-hooks` in the file `src/index.js` and pass the client to it. The `ApolloProvider` must wrap the `App` component that is rendered by `ReactDOM` by making the following changes:
+You can create a Provider by importing `ApolloProvider` from `@apollo/react-hooks` in the file `src/index.js` and pass the client to it. The `ApolloProvider` must be placed inside the `Router` to wrap the `App` component that is rendered by `ReactDOM` by making the following changes:
 
 ```js
 // src/index.js
 import React from "react";
 import ReactDOM from "react-dom";
+import { BrowserRouter as Router } from "react-router-dom";
 import ApolloClient from "apollo-boost";
 import ApolloProvider from "@apollo/react-apollo";
 import App from "./App";
@@ -189,9 +234,11 @@ const client = new ApolloClient({
 });
 
 ReactDOM.render(
-  <ApolloProvider client={client}>
-    <App />
-  </ApolloProvider>,
+  <Router>
+    <ApolloProvider client={client}>
+      <App />
+    </ApolloProvider>
+  </Router>,
   document.getElementById("root")
 );
 ```
@@ -202,7 +249,13 @@ From any component that's nested within `ApolloProvider` you can now send docume
 
 By wrapping the `App` component with `ApolloProvider` you can now use the methods `useQuery` and `useMutation` from `@apollo/react-hooks` to request and mutate data from the GraphQL server. These methods use the [Hooks pattern](https://www.apollographql.com/docs/react/api/react-hooks/) of React and take a GraphQL document as a parameter.
 
-First, let's add a list of all the events to the application by sending a document with a query to the GraphQL server using `useQuery`. This should be done from a new React component which you can create in the directory `src` and call it `Events.js`. The query for getting the events has been mentioned in this post before, and must be added to this file as well:
+First, let's add a list of all the events to the application by sending a document with a query to the GraphQL server using `useQuery`. This should be done from a new React component which you can create in the directory `src` and call it `Events.js` with the following command:
+
+```bash
+touch src/Events.js
+```
+
+The query for getting the events has been mentioned in this post before, and must be added to this file together with the `useQuery` Hook:
 
 ```js
 // src/Events.js
@@ -227,13 +280,16 @@ function Events() {
   if (error) return "Something went wrong...";
 
   return (
-    <ul>
-      {data.events.map(({ id, title, date }) => (
-        <li key={id}>
-          {title} ({date})
-        </li>
-      ))}
-    </ul>
+    <div>
+      <h1>Events</h1>
+      <ul>
+        {data.events.map(({ id, title, date }) => (
+          <li key={id}>
+            {title} ({date})
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -242,26 +298,29 @@ export default Events;
 
 The query `getEvents` is passed to the `useQuery` Hook that returns the variable `loading` when it gets called, after resolving the Hook will return either a `data` object with the events or an `error` object. If all goes well, the `data` object contains an array with the event which you can iterate over to return a list of all the events.
 
-To see the list of events in your browser you also need to import the `Events` component in the file `src/App.js` and have it returned by the `App` component. You do this by changing:
+To see the list of events in your browser you also need to import the `Events` component in the file `src/App.js` and have it returned by the `*` routes in your `App` component. You do this by changing:
 
 ```js
 // src/App.js
 import React from "react";
+import { Switch, Route } from "react-router-dom";
 import Events from "./Events";
 
 function App() {
   return (
-    <>
-      <h1>Events:</h1>
-      <Events />
-    </>
+    <Switch>
+      <Route path="/event/:id">Event</Route>
+      <Route path="*">
+        <Events />
+      </Route>
+    </Switch>
   );
 }
 
 export default App;
 ```
 
-If you open the browser again, you can see that the list of events is being displayed together with the `title` and `date` of eacht event. This page could use some styling, whihc can be done on several ways in React. One of the easiest ways to add styling to a React component is by using inline style attributes, that requires properties to be written in camel case. Let's see how this works by adding inline styling to the components in the file `src/Events.js`:
+If you open the browser again, you can see that the list of events is being displayed together with the `title` and `date` of each event. This page could use some styling, which can be done in several ways with React. One of the easiest ways to add styling to a React component is by using inline style attributes, that require properties to be written in camel case. Let's see how this works by adding inline styling to the components in the file `src/Events.js`:
 
 ```js
 // src/Events.js
@@ -274,37 +333,6 @@ function Events() {
   if (loading) return "Loading...";
   if (error) return "Something went wrong...";
 
-  return (
-    <ul style={{ listStyle: "none", width: "100%", padding: "0" }}>
-      {data.events.map(({ id, title, date }) => (
-        <li
-          key={id}
-          style={{
-            backgroundColor: "lightGrey",
-            marginBottom: "10px",
-            padding: "10px",
-            borderRadius: "5px"
-          }}
-        >
-          <h2>{title}</h2>
-          <span style={{ fontStyle: "italic" }}>{date}</span>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-export default Events;
-```
-
-Also, styling can be added to the `App` component by making the following changes in `src/App.js`:
-
-```js
-// src/App.js
-
-...
-
-function App() {
   return (
     <div style={{ fontFamily: "Helvetica" }}>
       <header
@@ -319,28 +347,195 @@ function App() {
       >
         <h1 style={{ color: "white" }}>Events</h1>
       </header>
-      <Events />
+      <ul style={{ listStyle: "none", width: "100%", padding: "0" }}>
+        {data.events.map(({ id, title, date }) => (
+          <li
+            key={id}
+            style={{
+              backgroundColor: "lightGrey",
+              marginBottom: "10px",
+              padding: "10px",
+              borderRadius: "5px"
+            }}
+          >
+            <h2>{title}</h2>
+            <span style={{ fontStyle: "italic" }}>{date}</span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
 
-export default App;
+export default Events;
 ```
 
-But having just a list of all the events is not sufficient, as you also want to display the attendants of that event. However, this information is private and requires you to send a valid JWT along with your query. This JWT can be retrieved by sending a request to the Auth0 authentication server, which you'll do in the next section of this post.
+But having just a list of all the events is not sufficient, as you also want to display the attendants of that event. However, this information is private and requires you to send a valid JWT along with your query. This JWT can be retrieved by sending a request to the Auth0 authentication service, which you'll do in the next section of this post.
 
 ## Securing a React app
 
-
-
-
-
-
-
+To secure your React application Auth0 is used, just as it was used to secure the GraphQL server that you're using for this post. By sending a request to the Auth0 authentication service with your credentials you'll retrieve a JWT that can be validated by the GraphQL server.
 
 ### Handle Authentication
 
-_This section will show how to add authentication to a SPA using Auth0_
+Sending a request to Auth0 can be done by using the package [`@auth0/auth0-spa-js`](https://auth0.com/docs/quickstart/spa/react/01-login) together with your Auth0 `Domain` and `Client ID`. To get these values you need to create a new Single-Page Application on the [Application Settings](https://manage.auth0.com/#/applications/) page in the Auth0 dashboard. Make sure to use the same Auth0 account as you did to set up the GraphQL server. To proceed you need to install both `@auth0/auth0-spa-js` from npm:
+
+```
+npm install @auth0/auth0-spa-js
+```
+
+After installing this package you must add a new file called `src/react-auth0-spa.js` in your project, by running:
+
+```bash
+touch src/react-auth0-spa.js
+```
+
+And place the following code inside:
+
+```js
+// src/react-auth0-spa.js
+import React, { useState, useEffect, useContext } from "react";
+import createAuth0Client from "@auth0/auth0-spa-js";
+
+const DEFAULT_REDIRECT_CALLBACK = () =>
+  window.history.replaceState({}, document.title, window.location.pathname);
+
+export const Auth0Context = React.createContext();
+export const useAuth0 = () => useContext(Auth0Context);
+export const Auth0Provider = ({
+  children,
+  onRedirectCallback = DEFAULT_REDIRECT_CALLBACK,
+  ...initOptions
+}) => {
+  const [isAuthenticated, setIsAuthenticated] = useState();
+  const [user, setUser] = useState();
+  const [auth0Client, setAuth0] = useState();
+  const [loading, setLoading] = useState(true);
+  const [popupOpen, setPopupOpen] = useState(false);
+
+  useEffect(() => {
+    const initAuth0 = async () => {
+      const auth0FromHook = await createAuth0Client(initOptions);
+      setAuth0(auth0FromHook);
+
+      if (window.location.search.includes("code=")) {
+        const { appState } = await auth0FromHook.handleRedirectCallback();
+        onRedirectCallback(appState);
+      }
+
+      const isAuthenticated = await auth0FromHook.isAuthenticated();
+
+      setIsAuthenticated(isAuthenticated);
+
+      if (isAuthenticated) {
+        const user = await auth0FromHook.getUser();
+        setUser(user);
+      }
+
+      setLoading(false);
+    };
+    initAuth0();
+    // eslint-disable-next-line
+  }, []);
+
+  const loginWithPopup = async (params = {}) => {
+    setPopupOpen(true);
+    try {
+      await auth0Client.loginWithPopup(params);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setPopupOpen(false);
+    }
+    const user = await auth0Client.getUser();
+    setUser(user);
+    setIsAuthenticated(true);
+  };
+
+  const handleRedirectCallback = async () => {
+    setLoading(true);
+    await auth0Client.handleRedirectCallback();
+    const user = await auth0Client.getUser();
+    setLoading(false);
+    setIsAuthenticated(true);
+    setUser(user);
+  };
+  return (
+    <Auth0Context.Provider
+      value={{
+        isAuthenticated,
+        user,
+        loading,
+        popupOpen,
+        loginWithPopup,
+        handleRedirectCallback,
+        getIdTokenClaims: (...p) => auth0Client.getIdTokenClaims(...p),
+        loginWithRedirect: (...p) => auth0Client.loginWithRedirect(...p),
+        getTokenSilently: (...p) => auth0Client.getTokenSilently(...p),
+        getTokenWithPopup: (...p) => auth0Client.getTokenWithPopup(...p),
+        logout: (...p) => auth0Client.logout(...p)
+      }}
+    >
+      {children}
+    </Auth0Context.Provider>
+  );
+};
+```
+
+This file sets up the connection with Auth0 and returns a Provider called `Auth0Provider` and a Hook. This Provider is similar to `ApolloProvider` and needs your Auth0 credentials, making it possible to use the `useAuth0` Hook to connect with Auth0 from any components that are nested inside.
+
+Before adding the `Auth0Provider` to your project you need to store the `Domain` and `Client ID` somewhere safe, like a local environment file. When you created an application using Create React App, you can create a `.env` in the root folder of your project and use the constants in this file from the `process.env` variable. Important to know is that these constants need to be prefixed with `REACT_APP_`. From the root directory of the project you need to run this command to create the `.env` file:
+
+```bash
+touch .env
+```
+
+In this file you can place the following code:
+
+```
+REACT_APP_AUTH0_DOMAIN=YOUR_AUTH0_DOMAIN
+REACT_APP_AUTH0_CLIENT_ID=YOUR_CLIENT_ID
+```
+
+The values of `YOUR_AUTH0_DOMAIN` and `YOUR_CLIENT_ID` must be replaced by the values from your Auth0 React "Quick Start" page as follows:
+
+- The value of `AUTH0_DOMAIN` is the value of the `issuer` object property from the code snippet, without the protocol, `https://`, the quotation marks, and the trailing slash. It follows this format `YOUR-AUTH0-TENANT.auth0.com`.
+- The value of `CLIENT_ID` is a unique public identifier for your application. Although it's a public identifier, it’s recommended to not make it easily guessable by third parties.
+
+Next to these credentials you need to set the _Callback URL_, _Logout URL_ and _Allowed Web Origins_ for your application on the [Application Settings](https://manage.auth0.com/#/applications/) page in the Auth0 dashboard. These values must be equal to the address where your React application is running, which is `http://localhost:3000`.
+
+You can now restart the development server of Create React App by running `npm install` again. Your Auth0 credentials should now be available to use in the application to set up `Auth0Provider` in the file `src/index.js`, and be placed inside the `ApolloProvider` component like this:
+
+```js
+// src/index.js
+import React from "react";
+import ReactDOM from "react-dom";
+import ApolloClient from "apollo-boost";
+import { ApolloProvider } from "@apollo/react-hooks";
+import App from "./App";
+import { Auth0Provider } from "./react-auth0-spa";
+import * as serviceWorker from "./serviceWorker";
+
+const client = new ApolloClient({
+  uri: "http://localhost:4000/graphql"
+});
+
+ReactDOM.render(
+  <ApolloProvider client={client}>
+    <Auth0Provider
+      domain={process.env.REACT_APP_AUTH0_DOMAIN}
+      client_id={process.env.REACT_APP_AUTH0_CLIENT_ID}
+      redirect_uri={window.location.origin}
+    >
+      <App />
+    </Auth0Provider>
+  </ApolloProvider>,
+  document.getElementById("root")
+);
+
+...
+
+```
 
 ### Handle Authorization
 
