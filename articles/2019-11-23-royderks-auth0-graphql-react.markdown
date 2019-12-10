@@ -200,7 +200,7 @@ From any component that's nested within `ApolloProvider` you can now send docume
 
 ### Query the GraphQL Server with Apollo
 
-By wrapping the `App` component with `ApolloProvider` you can now use the methods `useQuery` and `useMutation` from `@apollo/react-hooks` to request and mutate data from the GraphQL server. These methods use the [Hooks pattern](https://www.apollographql.com/docs/react/api/react-hooks/) of React and take a GraphQL document as parameter.
+By wrapping the `App` component with `ApolloProvider` you can now use the methods `useQuery` and `useMutation` from `@apollo/react-hooks` to request and mutate data from the GraphQL server. These methods use the [Hooks pattern](https://www.apollographql.com/docs/react/api/react-hooks/) of React and take a GraphQL document as a parameter.
 
 First, let's add a list of all the events to the application by sending a document with a query to the GraphQL server using `useQuery`. This should be done from a new React component which you can create in the directory `src` and call it `Events.js`. The query for getting the events has been mentioned in this post before, and must be added to this file as well:
 
@@ -242,7 +242,7 @@ export default Events;
 
 The query `getEvents` is passed to the `useQuery` Hook that returns the variable `loading` when it gets called, after resolving the Hook will return either a `data` object with the events or an `error` object. If all goes well, the `data` object contains an array with the event which you can iterate over to return a list of all the events.
 
-To see the list of events in your browser you also need to import the `Events` component in the file `src/App.js`, and have it returned by the `App` component. You do this by changing:
+To see the list of events in your browser you also need to import the `Events` component in the file `src/App.js` and have it returned by the `App` component. You do this by changing:
 
 ```js
 // src/App.js
@@ -261,13 +261,82 @@ function App() {
 export default App;
 ```
 
-But having just a list of all the events is not sufficient, as you also want to display the attendants of that event. To do this you need to 
+If you open the browser again, you can see that the list of events is being displayed together with the `title` and `date` of eacht event. This page could use some styling, whihc can be done on several ways in React. One of the easiest ways to add styling to a React component is by using inline style attributes, that requires properties to be written in camel case. Let's see how this works by adding inline styling to the components in the file `src/Events.js`:
 
+```js
+// src/Events.js
 
-​
-​
+...
+
+function Events() {
+  const { loading, data, error } = useQuery(GET_EVENTS);
+
+  if (loading) return "Loading...";
+  if (error) return "Something went wrong...";
+
+  return (
+    <ul style={{ listStyle: "none", width: "100%", padding: "0" }}>
+      {data.events.map(({ id, title, date }) => (
+        <li
+          key={id}
+          style={{
+            backgroundColor: "lightGrey",
+            marginBottom: "10px",
+            padding: "10px",
+            borderRadius: "5px"
+          }}
+        >
+          <h2>{title}</h2>
+          <span style={{ fontStyle: "italic" }}>{date}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+export default Events;
+```
+
+Also, styling can be added to the `App` component by making the following changes in `src/App.js`:
+
+```js
+// src/App.js
+
+...
+
+function App() {
+  return (
+    <div style={{ fontFamily: "Helvetica" }}>
+      <header
+        style={{
+          display: "inline-block",
+          width: "100%",
+          backgroundColor: "lightBlue",
+          padding: "10 20px",
+          textAlign: "center",
+          borderRadius: "5px"
+        }}
+      >
+        <h1 style={{ color: "white" }}>Events</h1>
+      </header>
+      <Events />
+    </div>
+  );
+}
+
+export default App;
+```
+
+But having just a list of all the events is not sufficient, as you also want to display the attendants of that event. However, this information is private and requires you to send a valid JWT along with your query. This JWT can be retrieved by sending a request to the Auth0 authentication server, which you'll do in the next section of this post.
 
 ## Securing a React app
+
+
+
+
+
+
+
 
 ### Handle Authentication
 
