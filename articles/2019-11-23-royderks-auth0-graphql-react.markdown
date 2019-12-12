@@ -512,6 +512,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import ApolloClient from "apollo-boost";
 import { ApolloProvider } from "@apollo/react-hooks";
+import { BrowserRouter as Router } from "react-router-dom";
 import App from "./App";
 import { Auth0Provider } from "./react-auth0-spa";
 import * as serviceWorker from "./serviceWorker";
@@ -521,21 +522,27 @@ const client = new ApolloClient({
 });
 
 ReactDOM.render(
-  <ApolloProvider client={client}>
-    <Auth0Provider
-      domain={process.env.REACT_APP_AUTH0_DOMAIN}
-      client_id={process.env.REACT_APP_AUTH0_CLIENT_ID}
-      redirect_uri={window.location.origin}
-    >
-      <App />
-    </Auth0Provider>
-  </ApolloProvider>,
+  <Router>
+    <ApolloProvider client={client}>
+      <Auth0Provider
+        domain={process.env.REACT_APP_AUTH0_DOMAIN}
+        client_id={process.env.REACT_APP_AUTH0_CLIENT_ID}
+        redirect_uri={window.location.origin}
+      >
+        <App />
+      </Auth0Provider>
+    </ApolloProvider>
+  </Router>,
   document.getElementById("root")
 );
 
 ...
 
 ```
+
+
+
+
 
 ### Handle Authorization
 
