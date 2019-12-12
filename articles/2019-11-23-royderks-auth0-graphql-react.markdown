@@ -280,16 +280,13 @@ function Events() {
   if (error) return "Something went wrong...";
 
   return (
-    <div>
-      <h1>Events</h1>
-      <ul>
-        {data.events.map(({ id, title, date }) => (
-          <li key={id}>
-            {title} ({date})
-          </li>
-        ))}
-      </ul>
-    </div>
+    <ul>
+      {data.events.map(({ id, title, date }) => (
+        <li key={id}>
+          {title} ({date})
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -298,7 +295,7 @@ export default Events;
 
 The query `getEvents` is passed to the `useQuery` Hook that returns the variable `loading` when it gets called, after resolving the Hook will return either a `data` object with the events or an `error` object. If all goes well, the `data` object contains an array with the event which you can iterate over to return a list of all the events.
 
-To see the list of events in your browser you also need to import the `Events` component in the file `src/App.js` and have it returned by the `*` routes in your `App` component. You do this by changing:
+To see the list of events in your browser you also need to import the `Events` component in the file `src/App.js` and have it returned by the `*` routes in your `App` component. Also, let's add a header with a title to this component with some styling. Styling can be done in several ways with React, and one of the easiest ways to add styling to a React component is by using inline style attributes that require properties to be written in camel case. Let's see how this works by adding inline styling to the `App` component:
 
 ```js
 // src/App.js
@@ -307,32 +304,6 @@ import { Switch, Route } from "react-router-dom";
 import Events from "./Events";
 
 function App() {
-  return (
-    <Switch>
-      <Route path="/event/:id">Event</Route>
-      <Route path="*">
-        <Events />
-      </Route>
-    </Switch>
-  );
-}
-
-export default App;
-```
-
-If you open the browser again, you can see that the list of events is being displayed together with the `title` and `date` of each event. This page could use some styling, which can be done in several ways with React. One of the easiest ways to add styling to a React component is by using inline style attributes, that require properties to be written in camel case. Let's see how this works by adding inline styling to the components in the file `src/Events.js`:
-
-```js
-// src/Events.js
-
-...
-
-function Events() {
-  const { loading, data, error } = useQuery(GET_EVENTS);
-
-  if (loading) return "Loading...";
-  if (error) return "Something went wrong...";
-
   return (
     <div style={{ fontFamily: "Helvetica" }}>
       <header
@@ -347,23 +318,49 @@ function Events() {
       >
         <h1 style={{ color: "white" }}>Events</h1>
       </header>
-      <ul style={{ listStyle: "none", width: "100%", padding: "0" }}>
-        {data.events.map(({ id, title, date }) => (
-          <li
-            key={id}
-            style={{
-              backgroundColor: "lightGrey",
-              marginBottom: "10px",
-              padding: "10px",
-              borderRadius: "5px"
-            }}
-          >
-            <h2>{title}</h2>
-            <span style={{ fontStyle: "italic" }}>{date}</span>
-          </li>
-        ))}
-      </ul>
+      <Switch>
+        <Route path="/event/:id">Event</Route>
+        <Route path="*">
+          <Events />
+        </Route>
+      </Switch>
     </div>
+  );
+}
+
+export default App;
+```
+
+If you open the browser again, you can see that the list of events is being displayed together with the `title` and `date` of each event. This page could also use some styling, which can be done by changing the following in the file `src/Events.js`:
+
+```js
+// src/Events.js
+
+...
+
+function Events() {
+  const { loading, data, error } = useQuery(GET_EVENTS);
+
+  if (loading) return "Loading...";
+  if (error) return "Something went wrong...";
+
+  return (
+    <ul style={{ listStyle: "none", width: "100%", padding: "0" }}>
+      {data.events.map(({ id, title, date }) => (
+        <li
+          key={id}
+          style={{
+            backgroundColor: "lightGrey",
+            marginBottom: "10px",
+            padding: "10px",
+            borderRadius: "5px"
+          }}
+        >
+          <h2>{title}</h2>
+          <span style={{ fontStyle: "italic" }}>{date}</span>
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -502,9 +499,9 @@ The values of `YOUR_AUTH0_DOMAIN` and `YOUR_CLIENT_ID` must be replaced by the v
 - The value of `AUTH0_DOMAIN` is the value of the `issuer` object property from the code snippet, without the protocol, `https://`, the quotation marks, and the trailing slash. It follows this format `YOUR-AUTH0-TENANT.auth0.com`.
 - The value of `CLIENT_ID` is a unique public identifier for your application. Although it's a public identifier, it’s recommended to not make it easily guessable by third parties.
 
-Next to these credentials you need to set the _Callback URL_, _Logout URL_ and _Allowed Web Origins_ for your application on the [Application Settings](https://manage.auth0.com/#/applications/) page in the Auth0 dashboard. These values must be equal to the address where your React application is running, which is `http://localhost:3000`.
+Next to these credentials, you need to set the _Callback URL_, _Logout URL_ and _Allowed Web Origins_ for your application on the [Application Settings](https://manage.auth0.com/#/applications/) page in the Auth0 dashboard. These values must be equal to the address where your React application is running, which is `http://localhost:3000`.
 
-You can now restart the development server of Create React App by running `npm install` again. Your Auth0 credentials should now be available to use in the application to set up `Auth0Provider` in the file `src/index.js`, and be placed inside the `ApolloProvider` component like this:
+You can now restart the development server of Create React App by running `npm start` again. Your Auth0 credentials should now be available to use in the application to set up `Auth0Provider` in the file `src/index.js` and be placed inside the `ApolloProvider` component. Also, `Auth0Provider` can call a callback function to redirect the user to the correct page after authentication. This function is used to clear the user's authentication code from the url to prevent them from having to reauthenticate if they move to a different page. The `history` object is used to have the user navigate without refreshing the page, something that would delete the users' authentication code from the Context of `Auth0Provider`:
 
 ```js
 // src/index.js
@@ -513,13 +510,20 @@ import ReactDOM from "react-dom";
 import ApolloClient from "apollo-boost";
 import { ApolloProvider } from "@apollo/react-hooks";
 import { BrowserRouter as Router } from "react-router-dom";
+import { createBrowserHistory } from "history";
 import App from "./App";
 import { Auth0Provider } from "./react-auth0-spa";
 import * as serviceWorker from "./serviceWorker";
 
+const history = createBrowserHistory();
+
 const client = new ApolloClient({
   uri: "http://localhost:4000/graphql"
 });
+
+const onRedirectCallback = () => {
+  history.push(window.location.pathname);
+};
 
 ReactDOM.render(
   <Router>
@@ -528,6 +532,7 @@ ReactDOM.render(
         domain={process.env.REACT_APP_AUTH0_DOMAIN}
         client_id={process.env.REACT_APP_AUTH0_CLIENT_ID}
         redirect_uri={window.location.origin}
+        onRedirectCallback={onRedirectCallback}
       >
         <App />
       </Auth0Provider>
@@ -540,13 +545,198 @@ ReactDOM.render(
 
 ```
 
+Any component that is nested within `Auth0Provider` is now able to send requests to the Auth0 service to authenticate the user, by using the `useAuth0` Hook. This Hook returns multiple functions to help you with this, starting with the `loginWithRedirect` method that initiates the authentication with Auth0 and redirects the user to the login page. Also, the function `logout` is used to unauthenticated users and the const `isAuthenticated` shows the authentication status of a user. This functionality should be added in the file `src/App.js`:
 
+```js
+// src/App.js
+import React from "react";
+import { Switch, Route } from "react-router-dom";
+import Events from "./Events";
+import { useAuth0 } from "./react-auth0-spa";
 
+function App() {
+  const { loginWithRedirect, logout, isAuthenticated } = useAuth0();
+
+  return (
+    <div style={{ fontFamily: "Helvetica" }}>
+      <header
+        style={{
+          display: "inline-block",
+          width: "100%",
+          backgroundColor: "lightBlue",
+          padding: "10 20px",
+          textAlign: "center",
+          borderRadius: "5px"
+        }}
+      >
+        <h1 style={{ color: "white" }}>Events</h1>
+        <button onClick={!isAuthenticated ? loginWithRedirect : logout}>
+          {!isAuthenticated ? "Login" : "Logout"}
+        </button>
+      </header>
+
+      ...
+
+```
+
+By clicking the *Login* button the Auth0 login screen gets opened and after logging in or creating an account, you get redirected to the page `http://localhost:3000`. If the authentication was successful, the *Login* button has now changed into a *Logout* button. Clicking this button will delete the authentication details of the user from the browsers.
+
+> Whenever you make a change to the code of this project, the Create React App development server can restart and make the browser refresh the page. If this happens, you need to re-authenticate with Auth0 by clicking the *Login* button again.
+
+After completing the steps in this part of the section you're able to authenticate with Auth0, meaning you can also start sending authenticated requests to the GraphQL server which you'll explore in the next part of this section.
+
+### Sending authenticated requests to the GraphQL server
+
+Now you're able to authenticate and it becomes possible to send authenticated requests to the server, for example when you want to query and individual event. To do this let's create a component to display a single event first. To do this create a file called `Event.js` in the `src` directory by running:
+
+```bash
+touch src/Event.js
+```
+
+And add this code block to that file:
+
+```js
+// src/Event.js
+import React from "react";
+import { useParams } from "react-router-dom";
+import { gql } from "apollo-boost";
+import { useQuery } from "@apollo/react-hooks";
+
+const GET_EVENT = gql`
+  query getEvent($id: Int!) {
+    event(id: $id) {
+      id
+      title
+      date
+      attendants {
+        id
+        name
+      }
+    }
+  }
+`;
+
+function Events() {
+  const { id } = useParams();
+
+  const { loading, data, error } = useQuery(GET_EVENT, {
+    variables: { id: parseInt(id) }
+  });
+
+  if (loading) return "Loading...";
+  if (error) return "Something went wrong...";
+
+  return (
+    <ul style={{ listStyle: "none", width: "100%", padding: "0" }}>
+      <li
+        style={{
+          backgroundColor: "lightGrey",
+          marginBottom: "10px",
+          padding: "10px",
+          borderRadius: "5px"
+        }}
+      >
+        <h2>{data.event.title}</h2>
+        <span style={{ fontStyle: "italic" }}>{data.event.date}</span>
+
+        <ul>
+          {data.event.attendants &&
+            data.event.attendants.map(attendant => (
+              <li key={attendant.id}>{attendant.name}</li>
+            ))}
+        </ul>
+      </li>
+    </ul>
+  );
+}
+
+export default Events;
+```
+
+This file uses the `GET_EVENT` query to retrieve a single event based on the `id` for the route, which you can test by going to `http://localhost:3000/event/2`. The `useParams` Hook from `react-router-dom` gets the value for `id` from the route and the `useQuery` Hook retrieves the event. You can see there are no attendants displayed yet, as the information on the field `attendants` is only visible when you pass a JWT with the query. 
+
+Passing along a JWT requires you to set more parameters to the `useQuery` Hook, but first let's make the single event route reachable from the `Events` component. Therefore you can use the `Link` component from `react-router-dom` and add this to the file `src/Events.js`:
+
+```js
+// src/Events.js
+import React from "react";
+import { gql } from "apollo-boost";
+import { useQuery } from "@apollo/react-hooks";
+import { Link } from "react-router-dom";
+
+  ...
+
+  return (
+    <ul style={{ listStyle: "none", width: "100%", padding: "0" }}>
+      {data.events.map(({ id, title, date }) => (
+        <Link to={`/event/${id}`}>
+          <li
+            key={id}
+            style={{
+              backgroundColor: "lightGrey",
+              marginBottom: "10px",
+              padding: "10px",
+              borderRadius: "5px"
+            }}
+          >
+            <h2>{title}</h2>
+            <span style={{ fontStyle: "italic" }}>{date}</span>
+          </li>
+        </Link>
+      ))}
+    </ul>
+  );
+}
+
+export default Events;
+```
+
+In the file `src/Event.js` the `useQuery` Hook must be altered so it can take a `context` object containing the header information as a parameter. This header information should include the field `authorization` that contains the JWT, which can be retrieved with the `getIdTokenClaims` from the `useAuth0` Hook. As this is an asynchronous function you need to call it from a React `useEffect` Hook and store the value in the local state using `useState` by making the following changes:
+
+```js
+// src/Event.js
+import React from "react";
+import { useParams } from "react-router-dom";
+import { gql } from "apollo-boost";
+import { useQuery } from "@apollo/react-hooks";
+import { useAuth0 } from "./react-auth0-spa";
+
+...
+
+function Events() {
+const { id } = useParams();
+    const { isAuthenticated, getIdTokenClaims } = useAuth0();
+
+  const [bearerToken, setBearerToken] = React.useState("");
+  React.useEffect(() => {
+    const getToken = async () => {
+      const token = isAuthenticated ? await getIdTokenClaims() : "";
+
+      setBearerToken(`Bearer ${token.__raw}`);
+    };
+    getToken();
+  }, [getIdTokenClaims, isAuthenticated]);
+
+  const { loading, data, error } = useQuery(GET_EVENT, {
+    variables: { id: parseInt(id), bearerToken },
+    context: {
+      headers: {
+        authorization: bearerToken
+      }
+    }
+  });
+
+  ...
+
+```
+
+After adding the asynchronous call to the `getIdTokenClaims` function, the token information for this user becomes available.
 
 
 ### Handle Authorization
 
+Sending documents with mutations to the GraphQL server is very similar to how you implemented this for queries in the first section of this post. Opposed to the `useQuery` Hook you'll use the Hook called `useMutation` instead, that helps you with sending the mutation that allows you to edit events. However, you don't want every authenticated user to be able to change the information of an event.
+
 _This section will show how to handle different authorization levels and send this to the GraphQL server_
-​
 
 ## Conclusion
